@@ -9,11 +9,11 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.event.ListenerContainerIdleEvent;
 import org.springframework.kafka.listener.ConsumerSeekAware;
-import org.springframework.stereotype.Component;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.Map;
 
-public class Listener implements ConsumerSeekAware {
+public class GreetingListener implements ConsumerSeekAware {
 
     private final ThreadLocal<ConsumerSeekCallback> seekCallBack = new ThreadLocal<>();
 
@@ -38,22 +38,22 @@ public class Listener implements ConsumerSeekAware {
 
     }
 
-    @KafkaListener(id = "greetingListener", topics = "gtopic", containerFactory = "greetingKafkaListenerContainerFactory")
-    public void listen(Greeting message) {
-        System.out.println("Received Message in group foo: " + message);
 
+    @KafkaListener(id = "greetingListener1", topics = "gtopic", containerFactory = "greetingKafkaListenerContainerFactory")
+    public void listenScheduled(Greeting message) {
+        System.out.println("Greeting: Received Message in group foo: " + message);
     }
 
     /**
-     * Reloading after the set timeout
+     * Handle the timeout event and reset the offset to the beginning.
+     * The listener is never stopped and was auto started in the beginning.
      *
      * @param event
      */
-    @EventListener()
+    @EventListener(condition = "event.listenerId.startsWith('greetingListener1')")
     public void eventHandler(ListenerContainerIdleEvent event) {
-        System.out.println("Reloading........");
-        this.seekCallBack.get().seek(topicName, 0, 0);
-//        kafkaListenerEndpointRegistry.getListenerContainer("greetingListener").stop();
-//        kafkaListenerEndpointRegistry.getListenerContainer("greetingListener").start();
+        System.out.println("Resetting greeting offset........");
+        this.seekCallBack.get().seekToBeginning(topicName, 0);
+
     }
 }
