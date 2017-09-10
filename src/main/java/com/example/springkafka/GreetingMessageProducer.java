@@ -9,6 +9,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+/**
+ * Start sending 20 messages after context is built.
+ */
 @Component
 public class GreetingMessageProducer implements CommandLineRunner {
 
